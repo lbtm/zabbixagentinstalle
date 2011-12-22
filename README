@@ -1,0 +1,26 @@
+Zabbix agent install
+==========================
+This is a simple shell script to install, remove, stop, and have the status of the agent zabbix.
+
+Docs
+====
+
+1) Download the script
+2) Be sure that execution right is set:chmod a+x ./zabbixagent.sh
+3) Check 'zabbix' user it's exist
+
+En execute:
+As root:
+
+# ./zabbixagent.sh 
+option : <installe|supp|status>
+
+Or has an allowed sudo user:
+
+# sudo ./zabbixagent.sh
+
+Versions
+========
+
+Version 0.1:
+  * zabbix agent 1.8.5
