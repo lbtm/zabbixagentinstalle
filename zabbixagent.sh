@@ -5,7 +5,7 @@
 # Script libre: GPLv3
 #
 # Syntaxe: # sudo ./zabbixagent.sh 
-#Parametres: <installe|remove|status>
+#Parametres: <installe|supp|statut>
 script_version="0.1" 
 
 #===================================Varibles==================================
@@ -13,7 +13,7 @@ ARCH=$(uname -m)
 DOMAINE=local
 SERVEURZABBIX=localhost
 DAEMON_NAME=zabbix_agentd
-PID=/tmp/$DAEMON_NAME.pid
+PID=/var/tmp/$DAEMON_NAME.pid
 ZABBIXDIR=/opt/zabbix
 ZABBIXDIR_1=/etc/zabbix
 ZABBIXDIR_2=/usr/local/zabbix/bin
@@ -156,6 +156,6 @@ case "$1" in
 			fi
 		;;
 		*)
-        echo "Usage: Zabbixagent {installe|supp|statut}"
+        echo "Usage: zabbixagent {installe|supp|statut}"
         exit 1
 esac
