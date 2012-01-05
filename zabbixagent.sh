@@ -5,8 +5,8 @@
 # Script libre: GPLv3
 #
 # Syntaxe: # sudo ./zabbixagent.sh 
-#Parametres: <installe|supp|statut>
-script_version="0.1" 
+# Parametres: <installe|supp|statut>
+script_version="0.2" 
 
 #===================================Varibles==================================
 ARCH=$(uname -m)
@@ -21,42 +21,59 @@ ZABBIXLOG=/var/log/zabbix
 ZABBIXTMP=/tmp/zabbixtmp
 #=============================================================================
 
+# Test que le script est lance en root
+if [ "$(id -u)" != "0" ]; then
+	echo "Le script doit etre execute en tant que root."
+  	echo "Syntaxe: su - ./zabbixagent.sh"
+  	exit 1
+fi
 
-case "$1" in 
+# Fonctions
+check_user() {
+	if [ ! `id -u zabbix` ]; then
+		echo "Creation de l'utilisateur zabbix"
+		/usr/sbin/useradd zabbix
+    	echo "Definissez un mot de passe pour l'utilisateur zabbix:"
+      	passwd zabbix
+	fi
+}
+
+case "$1" in
     installe)
         echo "----------------------------------------------------"
         date +"! %T %a %D : Installation de l'agent zabbix."
         echo "----------------------------------------------------"
-		echo "Creation des repertoires d'/installation" 
+		check_user
+		echo "Creation des repertoires d'/installation"
         if [ -e $ZABBIXDIR ]; then
-			echo "Le repertoire $ZABBIXDIR existe" 
+			echo "Le repertoire $ZABBIXDIR existe"
 		else 
-			mkdir /opt/zabbix 
+			mkdir /opt/zabbix
 		fi
 		if [ -e $ZABBIXDIR/bin ]; then
-			echo "Le repertoire $ZABBIXDIR/bin existe" 
+			echo "Le repertoire $ZABBIXDIR/bin existe"
 		else
-			mkdir /opt/zabbix/bin 
+			mkdir /opt/zabbix/bin
 		fi
 		if [ -e $ZABBIXDIR/conf ]; then
-			echo "Le repertoire $ZABBIXDIR/conf existe" 
+			echo "Le repertoire $ZABBIXDIR/conf existe"
 		else
-			mkdir /opt/zabbix/conf 
+			mkdir /opt/zabbix/conf
 		fi
 		if [ -e $ZABBIXDIR_1 ]; then
-			echo "Le repertoire $ZABBIXDIR_1 existe" 
+			echo "Le repertoire $ZABBIXDIR_1 existe"
 		else
 			mkdir /etc/zabbix
 		fi
 		if [ -e $ZABBIXDIR_2 ]; then
-			echo "Le repertoire $ZABBIXDIR_2 existe" 
+			echo "Le repertoire $ZABBIXDIR_2 existe"
 		else
 			 mkdir -p /usr/local/zabbix/bin
 		fi
 		if [ -e $ZABBIXLOG ]; then
-			echo "Le repertoire $ZABBIXLOG existe" 
+			echo "Le repertoire $ZABBIXLOG existe"
 		else
-			mkdir /var/log/zabbix 
+			mkdir /var/log/zabbix
 			touch /var/log/zabbix/zabbix_agentd.log
 			chmod 666 /var/log/zabbix/zabbix_agentd.log
 		fi
@@ -67,14 +84,14 @@ case "$1" in
 			echo "Telechargement des binaires x86_64"
 			wget http://www.zabbix.com/downloads/1.8.5/zabbix_agents_1.8.5.linux2_6.amd64.tar.gz
 			tar zxvf zabbix_agents_1.8.5.linux2_6.amd64.tar.gz
-		else 
+		else
 			mkdir $ZABBIXTMP
 			cd $ZABBIXTMP
 			echo "Telechargement des binaires i386"
 			wget http://www.zabbix.com/downloads/1.8.5/zabbix_agents_1.8.5.linux2_6.i386.tar.gz
 			tar zxvf zabbix_agents_1.8.5.linux2_6.i386.tar.gz
 		fi
-		echo "Copie des sources et des binaires" 
+		echo "Copie des sources et des binaires"
 			cd $ZABBIXTMP
 			cp sbin/* $ZABBIXDIR/bin
 			cp bin/* $ZABBIXDIR/bin
@@ -82,7 +99,7 @@ case "$1" in
 			ln -s $ZABBIXDIR/bin/zabbix_agentd $ZABBIXDIR_2/zabbix_agentd
 		echo "Termine."
 		
-		echo "Telechargement du fichier de configuration de l'agent" 
+		echo "Telechargement du fichier de configuration de l'agent"
 			wget --no-check-certificate https://github.com/downloads/lbtm/zabbixagentinstalle/zabbix_agentd.conf
 			chmod 644 zabbix_agentd.conf
 			echo "Copie du fichier de configuration de l'agent"
@@ -90,7 +107,7 @@ case "$1" in
 			ln -s $ZABBIXDIR/conf/zabbix_agentd.conf $ZABBIXDIR_1/zabbix_agentd.conf  
 		echo "Termine."
 		
-		echo "Configuration du demarrage automatique de l'agent" 
+		echo "Configuration du demarrage automatique de l'agent"
 			echo "zabbix_agent 10050/tcp" >> /etc/services
 			echo "zabbix_trap 10051/tcp"  >> /etc/services
 		
@@ -101,7 +118,7 @@ case "$1" in
 			cp zabbix_agentd /etc/init.d/
 			/sbin/chkconfig --add zabbix_agentd
 			/sbin/chkconfig --level 345 zabbix_agentd on
-		echo "Termine."       
+		echo "Termine."
 		
 		echo "Configuration de l'agent 'zabbix_agentd.conf'"
 			echo "#----VARIABLES POSITIONNEES A L'INSTALLATION PAR L'ADMIN----" >> $ZABBIXDIR/conf/zabbix_agentd.conf
@@ -120,37 +137,37 @@ case "$1" in
         date +"! %T %a %D : Fin."
         echo "----------------------------------------------------"
         ;;
-		
+
     supp)
         echo "Desinstallation de l'agent zabbix"
         echo "----------------------------------------------------"
         date +"! %T %a %D : Desinstallation de l'agent zabbix ." 
-        echo "----------------------------------------------------" 
-        echo "Arret $DAEMON_NAME" 
+        echo "----------------------------------------------------"
+        echo "Arret $DAEMON_NAME"
 		if [ -e $PID ]; then
 			killall -q $DAEMON_NAME
 		fi
-		echo "L'agent zabbix a ete arrete." 
+		echo "L'agent zabbix a ete arrete."
 		
 		echo "Suppression du repertoire d'installation"
 			rm -rf $ZABBIXDIR
 			rm -rf $ZABBIXLOG
 		echo "Suppression de l'utilisateur zabbix"
 			userdel zabbix
-        echo "L'utilisateur zabbix a ete supprime."  
+        echo "L'utilisateur zabbix a ete supprime."
 		   
 		echo "----------------------------------------------------"
         date +"! %T %a %D : Fin." 
-        echo "----------------------------------------------------" 
+        echo "----------------------------------------------------"
         ;;
-		
+
     statut)
         echo "----------------------------------------------------"
         date +"! %T %a %D : Statut du service de l'agent zabbix."
         echo "----------------------------------------------------"
 		echo "Verification du statut $DAEMON_NAME "
 			if [ -e $PID ]; then
-				echo "Statut: $DAEMON_NAME est en marche." 
+				echo "Statut: $DAEMON_NAME est en marche."
 			else
 				echo "Statut: $DAEMON_NAME n'est pas en marche."
 			fi
